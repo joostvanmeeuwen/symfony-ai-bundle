@@ -14,18 +14,18 @@ final class Configuration implements ConfigurationInterface
 
         $rootNode
             ->children()
-            ->arrayNode('ollama')
-            ->addDefaultsIfNotSet()
-            ->children()
-            ->scalarNode('base_url')
-            ->defaultValue('http://localhost:11434')
-            ->end()
-            ->scalarNode('model')
-            ->defaultValue('llama2')
-            ->end()
-            ->end()
-            ->end()
-            ->end()
+                ->arrayNode('ollama')
+                    ->addDefaultsIfNotSet()
+                        ->children()
+                            ->scalarNode('base_url')
+                                ->defaultValue('http://localhost:11434')
+                                ->end()
+                            ->scalarNode('model')
+                                ->defaultValue('llama2')
+                                ->end()
+                        ->end()
+                    ->end()
+                ->end()
         ;
 
         return $treeBuilder;

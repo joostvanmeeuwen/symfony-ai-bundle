@@ -26,6 +26,12 @@ final class VanMeuwenSymfonyAIExtension extends Extension
 
         $container->registerForAutoconfiguration(AIProviderInterface::class)
             ->addTag('van_meeuwen_symfony_ai.provider');
+
+        $container->prependExtensionConfig('framework', [
+            'validation' => [
+                'enabled' => true
+            ]
+        ]);
     }
 
     public function getConfiguration(array $config, ContainerBuilder $container): Configuration
