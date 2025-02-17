@@ -1,0 +1,11 @@
+{
+  "bundles": {
+    "VanMeeuwen\\SymfonyAI\\Infrastructure\\Bundle\\VanMeuwenSymfonyAIBundle": ["all"]
+  },
+  "copy-from-recipe": {
+    "config/": "%CONFIG_DIR%"
+  },
+  "env": {
+    "OLLAMA_BASE_URL": "http://localhost:11434"
+  }
+}

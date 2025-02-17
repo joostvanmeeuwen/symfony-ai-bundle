@@ -1,0 +1,33 @@
+{
+  "name": "vanmeeuwen/symfony-ai-bundle",
+  "type": "symfony-bundle",
+  "description": "Symfony bundle for integrating with various AI providers",
+  "keywords": ["symfony", "ai", "llm", "chatgpt", "claude", "ollama"],
+  "license": "MIT",
+  "require": {
+    "php": ">=8.2",
+    "symfony/framework-bundle": "^7.0",
+    "symfony/http-client": "^7.0",
+    "symfony/validator": "^7.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.0",
+    "symfony/phpunit-bridge": "^7.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "VanMeeuwen\\SymfonyAI\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "VanMeeuwen\\SymfonyAI\\Tests\\": "tests/"
+    }
+  },
+  "extra": {
+    "symfony": {
+      "allow-contrib": false,
+      "require": "7.2.*"
+    }
+  }
+}

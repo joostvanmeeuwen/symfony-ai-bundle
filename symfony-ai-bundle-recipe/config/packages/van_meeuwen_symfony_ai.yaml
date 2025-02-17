@@ -1,0 +1,4 @@
+van_meeuwen_symfony_ai:
+  ollama:
+    base_url: '%env(OLLAMA_BASE_URL)%'
+    model: 'phi4'

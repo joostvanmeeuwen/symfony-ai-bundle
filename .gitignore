@@ -1,0 +1,30 @@
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/.symfony/recipes/vanmeeuwen/symfony-ai-bundle/1.0/config/secrets/prod/prod.decrypt.private.php
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> IDEs ###
+.idea/
+.vscode/
+###< IDEs ###
+
+###> Docker ###
+docker-compose.override.yml
+###< Docker ###
+
+###> Cache and logs ###
+/var/cache/*
+/var/log/*
+!/var/cache/.gitkeep
+!/var/log/.gitkeep
+###< Cache and logs ###
+
+###> PHPUnit ###
+.phpunit.result.cache
+/phpunit.xml
+###< PHPUnit ###
