@@ -3,8 +3,3 @@ van_meeuwen_symfony_ai:
   ollama:
     base_url: '%env(OLLAMA_BASE_URL)%'
     model: 'llama2'
-
-# Add framework configuration for validator
-framework:
-  validation:
-    enabled: true
