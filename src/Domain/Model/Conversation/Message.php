@@ -3,6 +3,7 @@
 namespace VanMeeuwen\SymfonyAI\Domain\Model\Conversation;
 
 use DateTimeImmutable;
+use VanMeeuwen\SymfonyAI\Domain\Model\Parameters\AIParameters;
 
 final readonly class Message
 {
@@ -10,6 +11,7 @@ final readonly class Message
         private string            $content,
         private Role              $role,
         private DateTimeImmutable $createdAt,
+        private ?AIParameters     $parameters = null,
         private ?string           $id = null,
     ) {
     }
@@ -17,12 +19,14 @@ final readonly class Message
     public static function create(
         string $content,
         Role $role,
+        ?AIParameters $parameters = null,
         ?string $id = null
     ): self {
         return new self(
             content: $content,
             role: $role,
             createdAt: new DateTimeImmutable(),
+            parameters: $parameters ?? AIParameters::default(),
             id: $id
         );
     }
@@ -45,5 +49,21 @@ final readonly class Message
     public function getId(): ?string
     {
         return $this->id;
+    }
+
+    public function getParameters(): AIParameters
+    {
+        return $this->parameters ?? AIParameters::default();
+    }
+
+    public function withParameters(AIParameters $parameters): self
+    {
+        return new self(
+            content: $this->content,
+            role: $this->role,
+            createdAt: $this->createdAt,
+            parameters: $parameters,
+            id: $this->id
+        );
     }
 }

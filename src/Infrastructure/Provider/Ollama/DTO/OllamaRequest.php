@@ -2,17 +2,16 @@
 
 namespace VanMeeuwen\SymfonyAI\Infrastructure\Provider\Ollama\DTO;
 
+use VanMeeuwen\SymfonyAI\Domain\Model\Parameters\AIParameters;
+
 final readonly class OllamaRequest
 {
-    /**
-     * @param array<string, mixed> $options
-     */
     public function __construct(
         private string $model,
         private string $prompt,
         private ?string $system = null,
+        private ?AIParameters $parameters = null,
         private array $options = [],
-        private bool $stream = false,
     ) {
     }
 
@@ -21,16 +20,24 @@ final readonly class OllamaRequest
         $data = [
             'model' => $this->model,
             'prompt' => $this->prompt,
-            'stream' => $this->stream,
         ];
 
         if ($this->system !== null) {
             $data['system'] = $this->system;
         }
 
+        if ($this->parameters !== null) {
+            $data['options'] = array_merge($this->options, [
+                'temperature' => $this->parameters->getTemperature(),
+                'top_p' => $this->parameters->getTopP(),
+                'seed' => $this->parameters->getSeed(),
+            ]);
+        } else {
+            $data['options'] = $this->options;
+        }
 
-        if (!empty($this->options)) {
-            $data = array_merge($data, $this->options);
+        if ($this->parameters?->getMaxTokens() !== null) {
+            $data['options']['num_predict'] = $this->parameters->getMaxTokens();
         }
 
         return $data;
