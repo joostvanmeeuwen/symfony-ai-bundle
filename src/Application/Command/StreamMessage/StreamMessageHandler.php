@@ -4,7 +4,7 @@ namespace VanMeeuwen\SymfonyAI\Application\Command\StreamMessage;
 
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Message;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Role;
-use VanMeeuwen\SymfonyAI\Domain\Port\AIProviderInterface;
+use VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface;
 
 final readonly class StreamMessageHandler
 {

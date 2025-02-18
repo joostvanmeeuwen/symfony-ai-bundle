@@ -6,7 +6,7 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Conversation;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Message;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Role;
-use VanMeeuwen\SymfonyAI\Domain\Port\AIProviderInterface;
+use VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface;
 use VanMeeuwen\SymfonyAI\Infrastructure\Provider\Ollama\DTO\OllamaRequest;
 use VanMeeuwen\SymfonyAI\Infrastructure\Provider\Ollama\DTO\OllamaResponse;
 

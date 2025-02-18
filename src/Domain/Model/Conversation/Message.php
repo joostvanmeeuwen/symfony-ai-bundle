@@ -8,11 +8,11 @@ use VanMeeuwen\SymfonyAI\Domain\Model\Parameters\AIParameters;
 final readonly class Message
 {
     private function __construct(
-        private string            $content,
-        private Role              $role,
+        private string $content,
+        private Role $role,
         private DateTimeImmutable $createdAt,
-        private ?AIParameters     $parameters = null,
-        private ?string           $id = null,
+        private ?AIParameters $parameters = null,
+        private ?string $id = null,
     ) {
     }
 

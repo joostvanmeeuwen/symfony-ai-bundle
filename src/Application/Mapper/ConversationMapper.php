@@ -19,7 +19,7 @@ final readonly class ConversationMapper
             id: $conversation->getId(),
             createdAt: $conversation->getCreatedAt()->format('c'),
             messages: array_map(
-                fn (Message $message) => $this->messageMapper->toResponse($message),
+                fn(Message $message) => $this->messageMapper->toResponse($message),
                 $conversation->getMessages()
             ),
             title: $conversation->getTitle(),

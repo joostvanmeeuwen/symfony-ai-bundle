@@ -1,6 +1,6 @@
 <?php
 
-namespace VanMeeuwen\SymfonyAI\Domain\Port;
+namespace VanMeeuwen\SymfonyAI\Domain\AIProvider;
 
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Message;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Conversation;

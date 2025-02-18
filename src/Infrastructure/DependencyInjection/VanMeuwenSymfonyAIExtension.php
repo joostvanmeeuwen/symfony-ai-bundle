@@ -5,12 +5,11 @@ namespace VanMeeuwen\SymfonyAI\Infrastructure\DependencyInjection;
 use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\Extension;
-use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
-use VanMeeuwen\SymfonyAI\Domain\Port\AIProviderInterface;
+use VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface;
 
-final class VanMeuwenSymfonyAIExtension extends Extension {
-
+final class VanMeuwenSymfonyAIExtension extends Extension
+{
     public function load(array $configs, ContainerBuilder $container): void
     {
         $loader = new XmlFileLoader(
