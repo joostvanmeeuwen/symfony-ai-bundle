@@ -3,6 +3,7 @@
 namespace VanMeeuwen\SymfonyAI\Application\Mapper;
 
 use VanMeeuwen\SymfonyAI\Application\DTO\Response\ConversationResponse;
+use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Conversation;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Message;
 
 final readonly class ConversationMapper
@@ -12,7 +13,7 @@ final readonly class ConversationMapper
     ) {
     }
 
-    public function toResponse(\Conversation $conversation): ConversationResponse
+    public function toResponse(Conversation $conversation): ConversationResponse
     {
         return new ConversationResponse(
             id: $conversation->getId(),

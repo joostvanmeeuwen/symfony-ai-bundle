@@ -11,6 +11,8 @@ interface AIProviderInterface
 
     public function createConversation(): Conversation;
 
+    public function getConversation(string $id): ?Conversation;
+
     public function getProviderName(): string;
 
     public function supportsStreaming(): bool;

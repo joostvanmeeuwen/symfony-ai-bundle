@@ -81,4 +81,11 @@ final class OllamaProvider implements AIProviderInterface
     {
         return true;
     }
+
+    public function getConversation(string $id): ?Conversation
+    {
+        // TODO: Implement getConversation() method.
+    }
+
+
 }

@@ -2,6 +2,7 @@
 
 namespace VanMeeuwen\SymfonyAI\Domain\Model\Conversation;
 
+use DateTimeImmutable;
 
 final class Conversation
 {
@@ -11,7 +12,7 @@ final class Conversation
     private function __construct(
         private readonly string $id,
         private readonly DateTimeImmutable $createdAt,
-        private readonly ?string $title = null,
+        private ?string $title = null,
     ) {
     }
 
@@ -50,5 +51,10 @@ final class Conversation
     public function getTitle(): ?string
     {
         return $this->title;
+    }
+
+    public function setTitle(string $title): void
+    {
+        $this->title = $title;
     }
 }

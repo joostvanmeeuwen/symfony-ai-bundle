@@ -25,5 +25,5 @@ vanmeeuwen_symfony_ai:
 3. Add the environment variables to the `.env` file: 
 
 ```
-   OLLAMA_BASE_URL=http://localhost:11434
+OLLAMA_BASE_URL=http://localhost:11434
 ```

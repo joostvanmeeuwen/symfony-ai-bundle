@@ -12,6 +12,10 @@
         <service id="VanMeeuwen\SymfonyAI\Application\Mapper\MessageMapper"/>
         <service id="VanMeeuwen\SymfonyAI\Application\Mapper\ConversationMapper"/>
 
+        <!-- Command Handlers -->
+        <service id="VanMeeuwen\SymfonyAI\Application\Command\SendMessage\SendMessageHandler"/>
+        <service id="VanMeeuwen\SymfonyAI\Application\Command\CreateConversation\CreateConversationHandler"/>
+
         <!-- Ollama Provider -->
         <service id="van_meeuwen_symfony_ai.provider.ollama" class="VanMeeuwen\SymfonyAI\Infrastructure\Provider\Ollama\OllamaProvider">
             <argument type="service" id="http_client"/>

@@ -9,15 +9,7 @@ use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use VanMeeuwen\SymfonyAI\Domain\Port\AIProviderInterface;
 
-final class VanMeuwenSymfonyAIExtension extends Extension implements PrependExtensionInterface {
-    public function prepend(ContainerBuilder $container): void
-    {
-        $container->prependExtensionConfig('framework', [
-            'validation' => [
-                'enabled' => true
-            ]
-        ]);
-    }
+final class VanMeuwenSymfonyAIExtension extends Extension {
 
     public function load(array $configs, ContainerBuilder $container): void
     {
@@ -40,5 +32,10 @@ final class VanMeuwenSymfonyAIExtension extends Extension implements PrependExte
     public function getConfiguration(array $config, ContainerBuilder $container): Configuration
     {
         return new Configuration();
+    }
+
+    public function getAlias(): string
+    {
+        return 'van_meeuwen_symfony_ai';
     }
 }

@@ -12,6 +12,7 @@ final readonly class OllamaRequest
         private string $prompt,
         private ?string $system = null,
         private array $options = [],
+        private bool $stream = false,
     ) {
     }
 
@@ -20,11 +21,13 @@ final readonly class OllamaRequest
         $data = [
             'model' => $this->model,
             'prompt' => $this->prompt,
+            'stream' => $this->stream,
         ];
 
         if ($this->system !== null) {
             $data['system'] = $this->system;
         }
+
 
         if (!empty($this->options)) {
             $data = array_merge($data, $this->options);
