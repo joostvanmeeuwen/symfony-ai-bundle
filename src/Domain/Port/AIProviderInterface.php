@@ -9,6 +9,8 @@ interface AIProviderInterface
 {
     public function sendMessage(Message $message, ?Conversation $conversation = null): Message;
 
+    public function streamMessage(Message $message, callable $onChunk, ?Conversation $conversation = null): void;
+
     public function createConversation(): Conversation;
 
     public function getConversation(string $id): ?Conversation;

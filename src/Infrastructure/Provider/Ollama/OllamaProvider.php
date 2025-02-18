@@ -30,10 +30,76 @@ final class OllamaProvider implements AIProviderInterface
 
     public function sendMessage(Message $message, ?Conversation $conversation = null): Message
     {
-        if ($conversation !== null && !isset($this->activeConversations[$conversation->getId()])) {
-            $this->activeConversations[$conversation->getId()] = $conversation;
+        $request = $this->createRequest($message, $conversation);
+
+        $response = $this->httpClient->request(
+            'POST',
+            sprintf('%s/api/generate', rtrim($this->baseUrl, '/')),
+            [
+                'json' => $request->toArray(),
+            ]
+        );
+
+        $ollamaResponse = OllamaResponse::fromArray($response->toArray());
+
+        return Message::create(
+            content: $ollamaResponse->getResponse(),
+            role: Role::ASSISTANT,
+            parameters: $message->getParameters()
+        );
+    }
+
+    public function streamMessage(Message $message, callable $onChunk, ?Conversation $conversation = null): void
+    {
+        if (!$this->supportsStreaming()) {
+            throw new \RuntimeException('Streaming is not supported by this provider');
         }
 
+        $request = $this->createRequest($message, $conversation, true);
+
+        $response = $this->httpClient->request(
+            'POST',
+            sprintf('%s/api/generate', rtrim($this->baseUrl, '/')),
+            [
+                'json' => $request->toArray(),
+            ]
+        );
+
+        $stream = $this->httpClient->stream([$response]);
+
+        $buffer = '';
+        foreach ($stream as $chunk) {
+            $buffer .= $chunk->getContent();
+
+            $lines = explode("\n", $buffer);
+            $buffer = array_pop($lines);
+
+            foreach ($lines as $line) {
+                if (empty($line)) {
+                    continue;
+                }
+
+                $data = json_decode($line, true);
+                if ($data === null) {
+                    continue;
+                }
+
+                if (isset($data['response'])) {
+                    $onChunk($data['response']);
+                }
+            }
+        }
+
+        if (!empty($buffer)) {
+            $data = json_decode($buffer, true);
+            if ($data !== null && isset($data['response'])) {
+                $onChunk($data['response']);
+            }
+        }
+    }
+
+    private function createRequest(Message $message, ?Conversation $conversation, bool $stream = false): OllamaRequest
+    {
         $systemMessage = null;
         $context = [];
 
@@ -49,37 +115,18 @@ final class OllamaProvider implements AIProviderInterface
                     );
                 }
             }
-
-            $conversation->addMessage($message);
         }
 
-        $request = new OllamaRequest(
+        return new OllamaRequest(
             model: $this->model,
             prompt: $message->getContent(),
             system: $systemMessage,
+            parameters: $message->getParameters(),
             options: [
                 'context' => $context,
-            ]
+            ],
+            stream: $stream
         );
-
-        $response = $this->httpClient->request(
-            'POST',
-            sprintf('%s/api/generate', rtrim($this->baseUrl, '/')),
-            [
-                'json' => $request->toArray(),
-            ]
-        );
-
-        $ollamaResponse = OllamaResponse::fromArray($response->toArray());
-
-        $responseMessage = Message::create(
-            content: $ollamaResponse->getResponse(),
-            role: Role::ASSISTANT
-        );
-
-        $conversation?->addMessage($responseMessage);
-
-        return $responseMessage;
     }
 
     public function createConversation(): Conversation

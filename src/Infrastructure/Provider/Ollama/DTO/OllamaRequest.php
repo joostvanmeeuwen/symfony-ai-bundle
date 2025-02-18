@@ -12,6 +12,7 @@ final readonly class OllamaRequest
         private ?string $system = null,
         private ?AIParameters $parameters = null,
         private array $options = [],
+        private bool $stream = false,
     ) {
     }
 
@@ -20,6 +21,7 @@ final readonly class OllamaRequest
         $data = [
             'model' => $this->model,
             'prompt' => $this->prompt,
+            'stream' => $this->stream,
         ];
 
         if ($this->system !== null) {
