@@ -14,6 +14,13 @@ final class OllamaProvider implements AIProviderInterface
 {
     private const DEFAULT_MODEL = 'llama2';
 
+    /**
+     * Active conversations/chat sessions
+     * This is not for persistence, only for maintaining chat context during the session
+     * @var array<string, Conversation>
+     */
+    private array $activeConversations = [];
+
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly string $baseUrl,
@@ -23,6 +30,10 @@ final class OllamaProvider implements AIProviderInterface
 
     public function sendMessage(Message $message, ?Conversation $conversation = null): Message
     {
+        if ($conversation !== null && !isset($this->activeConversations[$conversation->getId()])) {
+            $this->activeConversations[$conversation->getId()] = $conversation;
+        }
+
         $systemMessage = null;
         $context = [];
 
@@ -38,6 +49,8 @@ final class OllamaProvider implements AIProviderInterface
                     );
                 }
             }
+
+            $conversation->addMessage($message);
         }
 
         $request = new OllamaRequest(
@@ -59,17 +72,30 @@ final class OllamaProvider implements AIProviderInterface
 
         $ollamaResponse = OllamaResponse::fromArray($response->toArray());
 
-        return Message::create(
+        $responseMessage = Message::create(
             content: $ollamaResponse->getResponse(),
             role: Role::ASSISTANT
         );
+
+        $conversation?->addMessage($responseMessage);
+
+        return $responseMessage;
     }
 
     public function createConversation(): Conversation
     {
-        return Conversation::create(
+        $conversation = Conversation::create(
             id: uniqid('ollama_', true)
         );
+
+        $this->activeConversations[$conversation->getId()] = $conversation;
+
+        return $conversation;
+    }
+
+    public function getConversation(string $id): ?Conversation
+    {
+        return $this->activeConversations[$id] ?? null;
     }
 
     public function getProviderName(): string
@@ -81,11 +107,4 @@ final class OllamaProvider implements AIProviderInterface
     {
         return true;
     }
-
-    public function getConversation(string $id): ?Conversation
-    {
-        // TODO: Implement getConversation() method.
-    }
-
-
 }
