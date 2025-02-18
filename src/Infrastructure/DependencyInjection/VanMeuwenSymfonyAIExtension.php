@@ -9,7 +9,15 @@ use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use VanMeeuwen\SymfonyAI\Domain\Port\AIProviderInterface;
 
-final class VanMeuwenSymfonyAIExtension extends Extension {
+final class VanMeuwenSymfonyAIExtension extends Extension implements PrependExtensionInterface {
+    public function prepend(ContainerBuilder $container): void
+    {
+        $container->prependExtensionConfig('framework', [
+            'validation' => [
+                'enabled' => true
+            ]
+        ]);
+    }
 
     public function load(array $configs, ContainerBuilder $container): void
     {
