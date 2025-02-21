@@ -2,7 +2,13 @@
 
 namespace VanMeeuwen\SymfonyAI\Infrastructure\Provider\Ollama;
 
+use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
+use VanMeeuwen\SymfonyAI\Domain\Exception\AIException;
+use VanMeeuwen\SymfonyAI\Domain\Exception\InvalidInputException;
+use VanMeeuwen\SymfonyAI\Domain\Exception\InvalidResponseException;
+use VanMeeuwen\SymfonyAI\Domain\Exception\NetworkException;
+use VanMeeuwen\SymfonyAI\Domain\Exception\TimeoutException;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Conversation;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Message;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Role;
@@ -13,6 +19,8 @@ use VanMeeuwen\SymfonyAI\Infrastructure\Provider\Ollama\DTO\OllamaResponse;
 final class OllamaProvider implements AIProviderInterface
 {
     private const DEFAULT_MODEL = 'llama2';
+
+    private const REQUEST_TIMEOUT = 30.0;
 
     /**
      * Active conversations/chat sessions
@@ -30,6 +38,7 @@ final class OllamaProvider implements AIProviderInterface
 
     public function sendMessage(Message $message, ?Conversation $conversation = null): Message
     {
+        try {
         $request = $this->createRequest($message, $conversation);
 
         $response = $this->httpClient->request(
@@ -40,6 +49,12 @@ final class OllamaProvider implements AIProviderInterface
             ]
         );
 
+        $data = $response->toArray(false);
+
+        if (!isset($data['response'])) {
+            throw new InvalidResponseException('Invalid response from Ollama API');
+        }
+
         $ollamaResponse = OllamaResponse::fromArray($response->toArray());
 
         return Message::create(
@@ -47,54 +62,85 @@ final class OllamaProvider implements AIProviderInterface
             role: Role::ASSISTANT,
             parameters: $message->getParameters()
         );
+        } catch (TransportExceptionInterface $e) {
+            if (str_contains($e->getMessage(), 'timeout')) {
+                throw new TimeoutException(
+                    'Request to Ollama API timed out after ' . self::REQUEST_TIMEOUT . ' seconds',
+                    0,
+                    $e
+                );
+            }
+
+            throw new NetworkException(
+                'Failed to communicate with Ollama API: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
 
     public function streamMessage(Message $message, callable $onChunk, ?Conversation $conversation = null): void
     {
         if (!$this->supportsStreaming()) {
-            throw new \RuntimeException('Streaming is not supported by this provider');
+            throw new InvalidInputException('Streaming is not supported by this provider');
         }
 
-        $request = $this->createRequest($message, $conversation, true);
+        try {
+            $request = $this->createRequest($message, $conversation, true);
 
-        $response = $this->httpClient->request(
-            'POST',
-            sprintf('%s/api/generate', rtrim($this->baseUrl, '/')),
-            [
-                'json' => $request->toArray(),
-            ]
-        );
+            $response = $this->httpClient->request(
+                'POST',
+                sprintf('%s/api/generate', rtrim($this->baseUrl, '/')),
+                [
+                    'json' => $request->toArray(),
+                ]
+            );
 
-        $stream = $this->httpClient->stream([$response]);
+            $stream = $this->httpClient->stream([$response]);
 
-        $buffer = '';
-        foreach ($stream as $chunk) {
-            $buffer .= $chunk->getContent();
+            $buffer = '';
+            foreach ($stream as $chunk) {
+                $buffer .= $chunk->getContent();
 
-            $lines = explode("\n", $buffer);
-            $buffer = array_pop($lines);
+                $lines = explode("\n", $buffer);
+                $buffer = array_pop($lines);
 
-            foreach ($lines as $line) {
-                if (empty($line)) {
-                    continue;
+                foreach ($lines as $line) {
+                    if (empty($line)) {
+                        continue;
+                    }
+
+                    $data = json_decode($line, true);
+                    if ($data === null) {
+                        continue;
+                    }
+
+                    if (isset($data['response'])) {
+                        $onChunk($data['response']);
+                    }
                 }
+            }
 
-                $data = json_decode($line, true);
-                if ($data === null) {
-                    continue;
-                }
-
-                if (isset($data['response'])) {
+            if (!empty($buffer)) {
+                $data = json_decode($buffer, true);
+                if ($data !== null && isset($data['response'])) {
                     $onChunk($data['response']);
                 }
             }
-        }
-
-        if (!empty($buffer)) {
-            $data = json_decode($buffer, true);
-            if ($data !== null && isset($data['response'])) {
-                $onChunk($data['response']);
+        } catch (TransportExceptionInterface $e) {
+            if (str_contains($e->getMessage(), 'timeout')) {
+                throw new TimeoutException(
+                    'Streaming request to Ollama API timed out after ' . self::REQUEST_TIMEOUT . ' seconds',
+                    0,
+                    $e
+                );
             }
+
+            throw new NetworkException(
+                'Failed to communicate with Ollama API during streaming: ' . $e->getMessage(),
+                0,
+                $e
+            );
         }
     }
 
