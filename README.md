@@ -169,3 +169,10 @@ class YourController
 
 - Ollama (with streaming support)
 - More coming soon (Claude, ChatGPT, etc.)
+
+## Unit tests
+
+Run unit tests
+```bash
+vendor/bin/phpunit --testsuite=Unit
+```
