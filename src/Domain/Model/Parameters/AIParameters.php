@@ -91,7 +91,7 @@ final readonly class AIParameters
     {
         return new self(
             temperature: 0.5,
-            maxTokens: 50,
+            maxTokens: 150,
             topP: 0.5,
             presencePenalty: 0,
             frequencyPenalty: 1
