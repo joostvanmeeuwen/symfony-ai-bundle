@@ -26,6 +26,6 @@
         </service>
 
         <!-- Make services public that need to be accessible from outside -->
-        <service id="VanMeeuwen\SymfonyAI\Domain\Port\AIProviderInterface" alias="van_meeuwen_symfony_ai.provider.ollama" public="true"/>
+        <service id="VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface" alias="van_meeuwen_symfony_ai.provider.ollama" public="true"/>
     </services>
 </container>
