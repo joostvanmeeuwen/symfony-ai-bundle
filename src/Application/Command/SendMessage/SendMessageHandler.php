@@ -7,6 +7,7 @@ use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Role;
 use VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface;
 use VanMeeuwen\SymfonyAI\Application\DTO\Response\MessageResponse;
 use VanMeeuwen\SymfonyAI\Application\Mapper\MessageMapper;
+use VanMeeuwen\SymfonyAI\Domain\Model\Parameters\AIParameters;
 
 final readonly class SendMessageHandler
 {
@@ -20,7 +21,8 @@ final readonly class SendMessageHandler
     {
         $userMessage = Message::create(
             content: $command->getContent(),
-            role: Role::from($command->getRole())
+            role: Role::from($command->getRole()),
+            parameters: $command->getParameters() ?? AIParameters::default()
         );
 
         $responseMessage = $this->aiProvider->sendMessage(
