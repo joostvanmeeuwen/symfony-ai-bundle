@@ -26,6 +26,21 @@ final class Configuration implements ConfigurationInterface
                         ->end()
                     ->end()
                 ->end()
+                ->arrayNode('lmstudio')
+                    ->addDefaultsIfNotSet()
+                        ->children()
+                            ->scalarNode('base_url')
+                                ->defaultValue('http://localhost:1234')
+                                ->end()
+                            ->scalarNode('model')
+                                ->defaultValue('phi-4')
+                                ->end()
+                        ->end()
+                    ->end()
+                ->scalarNode('default_provider')
+                    ->defaultValue('ollama')
+                    ->end()
+                ->end()
         ;
 
         return $treeBuilder;
