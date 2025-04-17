@@ -24,6 +24,11 @@ final class VanMeuwenSymfonyAIExtension extends Extension
         $container->setParameter('van_meeuwen_symfony_ai.ollama.base_url', $config['ollama']['base_url']);
         $container->setParameter('van_meeuwen_symfony_ai.ollama.model', $config['ollama']['model']);
 
+        $container->setParameter('van_meeuwen_symfony_ai.lmstudio.base_url', $config['lmstudio']['base_url']);
+        $container->setParameter('van_meeuwen_symfony_ai.lmstudio.model', $config['lmstudio']['model']);
+
+        $container->setParameter('van_meeuwen_symfony_ai.default_provider', $config['default_provider']);
+
         $container->registerForAutoconfiguration(AIProviderInterface::class)
             ->addTag('van_meeuwen_symfony_ai.provider');
     }

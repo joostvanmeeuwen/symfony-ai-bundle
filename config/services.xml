@@ -25,7 +25,14 @@
             <tag name="van_meeuwen_symfony_ai.provider"/>
         </service>
 
-        <!-- Make services public that need to be accessible from outside -->
+        <!-- LM Studio Provider -->
+        <service id="van_meeuwen_symfony_ai.provider.lmstudio" class="VanMeeuwen\SymfonyAI\Infrastructure\Provider\LMStudio\LMStudioProvider">
+            <argument type="service" id="http_client"/>
+            <argument>%van_meeuwen_symfony_ai.lmstudio.base_url%</argument>
+            <argument>%van_meeuwen_symfony_ai.lmstudio.model%</argument>
+            <tag name="van_meeuwen_symfony_ai.provider"/>
+        </service>
+
         <service id="VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface" alias="van_meeuwen_symfony_ai.provider.ollama" public="true"/>
     </services>
 </container>

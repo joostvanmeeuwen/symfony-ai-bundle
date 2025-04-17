@@ -29,14 +29,19 @@ composer require vanmeeuwen/symfony-ai-bundle
 3. Add configuration in `config/packages/van_meeuwen_symfony_ai.yaml`:
 ```yaml
 van_meeuwen_symfony_ai:
-    ollama:
-        base_url: '%env(OLLAMA_BASE_URL)%'
-        model: 'phi4'  # or your preferred model
+  default_provider: ollama
+  ollama:
+    base_url: '%env(OLLAMA_BASE_URL)%'
+    model: 'phi4'  # or your preferred model
+  lmstudio:
+    base_url: '%env(LMSTUDIO_BASE_URL)%'
+    model: mistral-7b
 ```
 
 4. Add to your `.env`:
 ```
 OLLAMA_BASE_URL=http://localhost:11434
+LMSTUDIO_BASE_URL=http://localhost:1234
 ```
 
 ## Usage

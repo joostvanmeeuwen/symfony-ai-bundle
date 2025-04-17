@@ -1,25 +1,22 @@
 <?php
 
-namespace VanMeeuwen\SymfonyAI\Infrastructure\Provider\Ollama;
+namespace VanMeeuwen\SymfonyAI\Infrastructure\Provider\LMStudio;
 
 use Symfony\Contracts\HttpClient\Exception\TransportExceptionInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
-use VanMeeuwen\SymfonyAI\Domain\Exception\AIException;
-use VanMeeuwen\SymfonyAI\Domain\Exception\InvalidInputException;
+use VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface;
 use VanMeeuwen\SymfonyAI\Domain\Exception\InvalidResponseException;
 use VanMeeuwen\SymfonyAI\Domain\Exception\NetworkException;
 use VanMeeuwen\SymfonyAI\Domain\Exception\TimeoutException;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Conversation;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Message;
 use VanMeeuwen\SymfonyAI\Domain\Model\Conversation\Role;
-use VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface;
-use VanMeeuwen\SymfonyAI\Infrastructure\Provider\Ollama\DTO\OllamaRequest;
-use VanMeeuwen\SymfonyAI\Infrastructure\Provider\Ollama\DTO\OllamaResponse;
+use VanMeeuwen\SymfonyAI\Infrastructure\Provider\LMStudio\DTO\LMStudioRequest;
+use VanMeeuwen\SymfonyAI\Infrastructure\Provider\LMStudio\DTO\LMStudioResponse;
 
-final class OllamaProvider implements AIProviderInterface
+class LMStudioProvider implements AIProviderInterface
 {
-    private const DEFAULT_MODEL = 'llama2';
-
+    private const DEFAULT_MODEL = 'default';
     private const REQUEST_TIMEOUT = 30.0;
 
     /**
@@ -43,45 +40,45 @@ final class OllamaProvider implements AIProviderInterface
 
             $response = $this->httpClient->request(
                 'POST',
-                sprintf('%s/api/generate', rtrim($this->baseUrl, '/')),
+                sprintf('%s/v1/chat/completions', rtrim($this->baseUrl, '/')),
                 [
                     'json' => $request->toArray(),
+                    'timeout' => self::REQUEST_TIMEOUT,
                 ]
             );
-
 
             try {
                 $data = $response->toArray(false);
             } catch (\Throwable $throwable) {
                 throw new InvalidResponseException(
-                    'Invalid response from Ollama API: ' . $throwable->getMessage(),
+                    'Invalid response from LM Studio API: ' . $throwable->getMessage(),
                     $throwable->getCode(),
                     $throwable
                 );
             }
 
-            if (!isset($data['response'])) {
-                throw new InvalidResponseException('Invalid response from Ollama API');
+            if (!isset($data['choices'][0]['message']['content'])) {
+                throw new InvalidResponseException('Invalid response from LM Studio API');
             }
 
-            $ollamaResponse = OllamaResponse::fromArray($response->toArray());
+            $lmStudioResponse = LMStudioResponse::fromArray($data);
 
             return Message::create(
-                content: $ollamaResponse->getResponse(),
+                content: $lmStudioResponse->getContent(),
                 role: Role::ASSISTANT,
                 parameters: $message->getParameters()
             );
         } catch (TransportExceptionInterface $e) {
             if (str_contains($e->getMessage(), 'timeout')) {
                 throw new TimeoutException(
-                    'Request to Ollama API timed out after ' . self::REQUEST_TIMEOUT . ' seconds',
+                    'Request to LM Studio API timed out after ' . self::REQUEST_TIMEOUT . ' seconds',
                     0,
                     $e
                 );
             }
 
             throw new NetworkException(
-                'Failed to communicate with Ollama API: ' . $e->getMessage(),
+                'Failed to communicate with LM Studio API: ' . $e->getMessage(),
                 0,
                 $e
             );
@@ -99,9 +96,10 @@ final class OllamaProvider implements AIProviderInterface
 
             $response = $this->httpClient->request(
                 'POST',
-                sprintf('%s/api/generate', rtrim($this->baseUrl, '/')),
+                sprintf('%s/v1/chat/completions', rtrim($this->baseUrl, '/')),
                 [
                     'json' => $request->toArray(),
+                    'timeout' => self::REQUEST_TIMEOUT,
                 ]
             );
 
@@ -110,76 +108,76 @@ final class OllamaProvider implements AIProviderInterface
             $buffer = '';
             foreach ($stream as $chunk) {
                 $buffer .= $chunk->getContent();
+                $parts = explode("data: ", $buffer);
 
-                $lines = explode("\n", $buffer);
-                $buffer = array_pop($lines);
+                $buffer = array_shift($parts);
 
-                foreach ($lines as $line) {
-                    if (empty($line)) {
+                foreach ($parts as $part) {
+                    $part = trim($part);
+                    if (empty($part)) {
                         continue;
                     }
 
-                    $data = json_decode($line, true);
-                    if ($data === null) {
+                    if ($part === '[DONE]') {
                         continue;
                     }
 
-                    if (isset($data['response'])) {
-                        $onChunk($data['response']);
-                    }
-                }
-            }
+                    try {
+                        $data = json_decode($part, true);
+                        if ($data === null) {
+                            continue;
+                        }
 
-            if (!empty($buffer)) {
-                $data = json_decode($buffer, true);
-                if ($data !== null && isset($data['response'])) {
-                    $onChunk($data['response']);
+                        if (isset($data['choices'][0]['delta']['content'])) {
+                            $content = $data['choices'][0]['delta']['content'];
+                            $onChunk($content);
+                        }
+                    } catch (\JsonException $e) {
+                        continue;
+                    }
                 }
             }
         } catch (TransportExceptionInterface $e) {
             if (str_contains($e->getMessage(), 'timeout')) {
                 throw new TimeoutException(
-                    'Streaming request to Ollama API timed out after ' . self::REQUEST_TIMEOUT . ' seconds',
+                    'Streaming request to LM Studio API timed out after ' . self::REQUEST_TIMEOUT . ' seconds',
                     0,
                     $e
                 );
             }
 
             throw new NetworkException(
-                'Failed to communicate with Ollama API during streaming: ' . $e->getMessage(),
+                'Failed to communicate with LM Studio API during streaming: ' . $e->getMessage(),
                 0,
                 $e
             );
         }
     }
 
-    private function createRequest(Message $message, ?Conversation $conversation, bool $stream = false): OllamaRequest
+    private function createRequest(Message $message, ?Conversation $conversation, bool $stream = false): LMStudioRequest
     {
-        $systemMessage = null;
-        $context = [];
+        $messages = [];
 
         if ($conversation !== null) {
             foreach ($conversation->getMessages() as $historyMessage) {
-                if ($historyMessage->getRole() === Role::SYSTEM) {
-                    $systemMessage = $historyMessage->getContent();
-                } else {
-                    $context[] = sprintf(
-                        "%s: %s",
-                        $historyMessage->getRole()->value,
-                        $historyMessage->getContent()
-                    );
-                }
+                $messages[] = [
+                    'role' => $historyMessage->getRole()->value,
+                    'content' => $historyMessage->getContent(),
+                ];
             }
         }
 
-        return new OllamaRequest(
+        $messages[] = [
+            'role' => $message->getRole()->value,
+            'content' => $message->getContent(),
+        ];
+
+        return new LMStudioRequest(
+            messages: $messages,
             model: $this->model,
-            prompt: $message->getContent(),
-            system: $systemMessage,
-            parameters: $message->getParameters(),
-            options: [
-                'context' => $context,
-            ],
+            temperature: $message->getParameters()->getTemperature(),
+            topP: $message->getParameters()->getTopP(),
+            maxTokens: $message->getParameters()->getMaxTokens(),
             stream: $stream
         );
     }
@@ -187,7 +185,7 @@ final class OllamaProvider implements AIProviderInterface
     public function createConversation(): Conversation
     {
         $conversation = Conversation::create(
-            id: uniqid('ollama_', true)
+            id: uniqid('lmstudio_', true)
         );
 
         $this->activeConversations[$conversation->getId()] = $conversation;
@@ -202,7 +200,7 @@ final class OllamaProvider implements AIProviderInterface
 
     public function getProviderName(): string
     {
-        return 'ollama';
+        return 'lmstudio';
     }
 
     public function supportsStreaming(): bool
