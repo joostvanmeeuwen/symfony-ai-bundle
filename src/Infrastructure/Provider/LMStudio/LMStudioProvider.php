@@ -167,7 +167,6 @@ class LMStudioProvider implements AIProviderInterface
             }
         }
 
-        // Add the current message
         $messages[] = [
             'role' => $message->getRole()->value,
             'content' => $message->getContent(),
