@@ -34,6 +34,6 @@
         </service>
 
         <!-- Default provider - use parameter to control which provider is used -->
-        <service id="VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface" alias="van_meeuwen_symfony_ai.provider.%van_meeuwen_symfony_ai.default_provider%" public="true"/>
+        <service id="VanMeeuwen\SymfonyAI\Domain\AIProvider\AIProviderInterface" alias="van_meeuwen_symfony_ai.provider.ollama" public="true"/>
     </services>
 </container>

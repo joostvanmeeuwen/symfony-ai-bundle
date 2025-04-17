@@ -48,7 +48,6 @@ class LMStudioProvider implements AIProviderInterface
             );
 
             try {
-
                 $data = $response->toArray(false);
             } catch (\Throwable $throwable) {
                 throw new InvalidResponseException(

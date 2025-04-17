@@ -1,5 +1,9 @@
 # Default configuration for the bundle
 van_meeuwen_symfony_ai:
+  default_provider: ollama
   ollama:
     base_url: '%env(OLLAMA_BASE_URL)%'
     model: 'llama2'
+  lmstudio:
+    base_url: '%env(LMSTUDIO_BASE_URL)%'
+    model: deepseek-r1-distill-qwen-7b

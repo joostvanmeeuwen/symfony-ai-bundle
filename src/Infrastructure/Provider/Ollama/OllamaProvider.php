@@ -39,29 +39,38 @@ final class OllamaProvider implements AIProviderInterface
     public function sendMessage(Message $message, ?Conversation $conversation = null): Message
     {
         try {
-        $request = $this->createRequest($message, $conversation);
+            $request = $this->createRequest($message, $conversation);
 
-        $response = $this->httpClient->request(
-            'POST',
-            sprintf('%s/api/generate', rtrim($this->baseUrl, '/')),
-            [
-                'json' => $request->toArray(),
-            ]
-        );
+            $response = $this->httpClient->request(
+                'POST',
+                sprintf('%s/api/generate', rtrim($this->baseUrl, '/')),
+                [
+                    'json' => $request->toArray(),
+                ]
+            );
 
-        $data = $response->toArray(false);
 
-        if (!isset($data['response'])) {
-            throw new InvalidResponseException('Invalid response from Ollama API');
-        }
+            try {
+                $data = $response->toArray(false);
+            } catch (\Throwable $throwable) {
+                throw new InvalidResponseException(
+                    'Invalid response from Ollama API: ' . $throwable->getMessage(),
+                    $throwable->getCode(),
+                    $throwable
+                );
+            }
 
-        $ollamaResponse = OllamaResponse::fromArray($response->toArray());
+            if (!isset($data['response'])) {
+                throw new InvalidResponseException('Invalid response from Ollama API');
+            }
 
-        return Message::create(
-            content: $ollamaResponse->getResponse(),
-            role: Role::ASSISTANT,
-            parameters: $message->getParameters()
-        );
+            $ollamaResponse = OllamaResponse::fromArray($response->toArray());
+
+            return Message::create(
+                content: $ollamaResponse->getResponse(),
+                role: Role::ASSISTANT,
+                parameters: $message->getParameters()
+            );
         } catch (TransportExceptionInterface $e) {
             if (str_contains($e->getMessage(), 'timeout')) {
                 throw new TimeoutException(
