@@ -87,7 +87,71 @@ class LMStudioProvider implements AIProviderInterface
 
     public function streamMessage(Message $message, callable $onChunk, ?Conversation $conversation = null): void
     {
-        // TODO: Implement streamMessage() method.
+        if (!$this->supportsStreaming()) {
+            throw new InvalidInputException('Streaming is not supported by this provider');
+        }
+
+        try {
+            $request = $this->createRequest($message, $conversation, true);
+
+            $response = $this->httpClient->request(
+                'POST',
+                sprintf('%s/v1/chat/completions', rtrim($this->baseUrl, '/')),
+                [
+                    'json' => $request->toArray(),
+                    'timeout' => self::REQUEST_TIMEOUT,
+                ]
+            );
+
+            $stream = $this->httpClient->stream([$response]);
+
+            $buffer = '';
+            foreach ($stream as $chunk) {
+                $buffer .= $chunk->getContent();
+                $parts = explode("data: ", $buffer);
+
+                $buffer = array_shift($parts);
+
+                foreach ($parts as $part) {
+                    $part = trim($part);
+                    if (empty($part)) {
+                        continue;
+                    }
+
+                    if ($part === '[DONE]') {
+                        continue;
+                    }
+
+                    try {
+                        $data = json_decode($part, true);
+                        if ($data === null) {
+                            continue;
+                        }
+
+                        if (isset($data['choices'][0]['delta']['content'])) {
+                            $content = $data['choices'][0]['delta']['content'];
+                            $onChunk($content);
+                        }
+                    } catch (\JsonException $e) {
+                        continue;
+                    }
+                }
+            }
+        } catch (TransportExceptionInterface $e) {
+            if (str_contains($e->getMessage(), 'timeout')) {
+                throw new TimeoutException(
+                    'Streaming request to LM Studio API timed out after ' . self::REQUEST_TIMEOUT . ' seconds',
+                    0,
+                    $e
+                );
+            }
+
+            throw new NetworkException(
+                'Failed to communicate with LM Studio API during streaming: ' . $e->getMessage(),
+                0,
+                $e
+            );
+        }
     }
 
     private function createRequest(Message $message, ?Conversation $conversation, bool $stream = false): LMStudioRequest
